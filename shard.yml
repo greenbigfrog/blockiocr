@@ -1,0 +1,14 @@
+name: blockiocr
+version: 0.0.1
+
+authors:
+  - Jonathan <greenbigfrog@gmail.com>
+
+crystal: 0.23.1
+
+license: MIT
+
+development_dependencies:
+  dotenv:
+    github: gdotdesign/cr-dotenv
+

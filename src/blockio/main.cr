@@ -15,5 +15,41 @@ module Blockio
     def get_balance
       @help.get("get_balance")
     end
+
+    # Returns the (unarchived) addresses, their labels, user ids, and balances on your account.
+    # (Do not use this if you plan on having more than 2,500 addresses on your account. Use get_address_balance instead.)
+    def get_my_addresses
+      @help.get("get_my_addresses")
+    end
+
+    # Returns all the (unarchived) addresses, their labels, and user ids on your account.
+    def get_my_addresses_without_balances
+      @help.get("get_my_addresses_without_balances")
+    end
+
+    # Returns the balance of the specified addresses, or labels.
+    # (Can be used to query balances for external (non-account) addresses. If an external address' balance is returned, its user_id and label fields will be null.)
+    # TODO implement allowance of labels
+    def get_address_balance(addresses)
+      if addresses.is_a?(Array)
+        string = "addresses="
+        addresses.each do |x|
+          if string == "addresses="
+            string = string + x
+          else
+            string = string + "," + x
+          end
+        end
+      else
+        string = "addresses=#{addresses}"
+      end
+
+      @help.get("get_address_balance", string)
+    end
+
+    # Returns the address specified by a label.
+    def get_address_by_label(label : String)
+      @help.get("get_address_by_label", "label=#{label}")
+    end
   end
 end

@@ -10,8 +10,9 @@ class Helper
     JSON.parse(res.body)
   end
 
-  def get(endpoint : String, data : String = nil)
-    data = "&#{data}" unless data.nil?
-    self.rest(@api_base + endpoint + data)
+  def get(endpoint : String, data : String = "")
+    data = "&#{data}" unless data.empty?
+    puts @api_base + endpoint + data
+    self.rest(@api_base + endpoint + "?api_key=#{@api_key}" + data)
   end
 end

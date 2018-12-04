@@ -12,7 +12,9 @@ class Helper
 
   def get(endpoint : String, data : String = "")
     data = "&#{data}" unless data.empty?
-    puts @api_base + endpoint + data
-    self.rest(@api_base + endpoint + "?api_key=#{@api_key}" + data)
+    res = self.rest(@api_base + endpoint + "?api_key=#{@api_key}" + data)
+    data = res["data"]
+    raise "Error: #{data["error_message"]}" unless res["status"] == "success"
+    data
   end
 end

@@ -10,9 +10,11 @@ class Helper
     JSON.parse(res.body)
   end
 
-  def get(endpoint : String, data : String = "")
-    data = "&#{data}" unless data.empty?
-    res = self.rest(@api_base + endpoint + "?api_key=#{@api_key}" + data)
+  def get(endpoint : String, *args)
+    args = args.join('&')
+    args = '&' + args unless args.empty?
+
+    res = self.rest(@api_base + endpoint + "?api_key=#{@api_key}" + args)
     data = res["data"]
     raise "Error: #{data["error_message"]}" unless res["status"] == "success"
     data

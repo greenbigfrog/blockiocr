@@ -11,4 +11,5 @@ license: MIT
 development_dependencies:
   dotenv:
     github: gdotdesign/cr-dotenv
-
+  bitcoinutil:
+    github: packetzero/bitcoinutils

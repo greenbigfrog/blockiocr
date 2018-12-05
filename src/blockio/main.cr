@@ -1,3 +1,5 @@
+require "big/big_decimal"
+
 module Blockio
   class Client
     def initialize(@api_key : String)
@@ -10,7 +12,7 @@ module Blockio
     def get_new_address(label : String = "")
       label = "&label=#{label}" unless label.empty?
 
-      @help.get(endpoint: "get_new_address", data: label)
+      @help.get("get_new_address", label)
     end
 
     # Returns the balance of your entire Bitcoin, Litecoin, or Dogecoin account (i.e., the sum of balances of all addresses/users within it) as numbers to 8 decimal points, as strings.
@@ -57,8 +59,21 @@ module Blockio
     # Withdrawal Actions
 
     # Withdraws amount of coins from any addresses in your account to up to 2500 destination addresses.
-    def withdraw
-      # TODO
+    def withdraw(input : Hash(String, BigDecimal))
+      amounts = "amounts="
+      addresses = "to_addresses="
+      input.each do |address, amount|
+        addresses += address + ','
+        amounts += amount.to_s + ','
+      end
+
+      addresses = addresses.rchop(',')
+      amounts = amounts.rchop(',')
+      @help.get("withdraw", addresses, amounts)
+    end
+
+    def withdraw(address : String, amount : BigDecimal)
+      withdraw({address => amount})
     end
 
     # Withdraws AMOUNT coins from upto 2500 addresses at a time, and deposits it to up to 2500 destination addresses.

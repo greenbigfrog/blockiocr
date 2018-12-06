@@ -62,11 +62,15 @@ class OpenSSL::HMAC
   end
 end
 
-def hash256(bytes)
+def hash256(input : Bytes)
   hash = OpenSSL::Digest.new("SHA256")
-  hash.update(bytes)
+  hash.update(input)
 
   hash.hexdigest
+end
+
+def hash256(string : String)
+  hash256(string.to_slice)
 end
 
 def get_public_key_from_private_string(input)
@@ -75,6 +79,7 @@ end
 
 def sign(priv_key, data)
   rand = BigInt.new(48) # some random data
+  data = hash256(hash256(data))
   a = SecP256K1.sign(BigInt.new(data, 16), BigInt.new(priv_key, 16), rand)
   puts b = a.to_s(16)
 
@@ -118,7 +123,7 @@ decrypted = AES.decrypt(final_key, encrypted)
 output = "https://block.io/api/v2/verify_signature/?"
 # Now let's use the decrypted data as a Private Key, and get its Public Key:
 # (8) Pass (7) through SHA256 once: 7a01628988d23fae697fa05fcdae5a82fe4f749aa9f24d35d23f81bee917dfc3
-priv_key = hash256(decrypted.to_slice)
+priv_key = hash256(decrypted)
 # (9) We use (8) as the Private Key.
 # (10) Use (8) to get Public Key: 03359ac0aa241b1a40fcab68486f8a4b546ad3301d201c3645487093578592ec8f
 output += "public_key=" + get_public_key_from_private_string(priv_key)

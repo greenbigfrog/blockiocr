@@ -1,0 +1,24 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    eventmachine (1.2.7)
+    pbkdf2-ruby (0.2.1)
+    websocket (1.2.8)
+    websocket-eventmachine-base (1.2.0)
+      eventmachine (~> 1.0)
+      websocket (~> 1.0)
+      websocket-native (~> 1.0)
+    websocket-eventmachine-server (1.0.1)
+      websocket-eventmachine-base (~> 1.0)
+    websocket-native (1.0.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  eventmachine
+  pbkdf2-ruby
+  websocket-eventmachine-server
+
+BUNDLED WITH
+   1.17.1

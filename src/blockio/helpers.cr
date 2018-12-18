@@ -6,7 +6,7 @@ class Helper
   end
 
   def rest(link : String)
-    res = HTTP::Client.get link
+    res = HTTP::Client.post link
     JSON.parse(res.body)
   end
 
@@ -14,9 +14,10 @@ class Helper
     args = args.join('&')
     args = '&' + args unless args.empty?
 
-    res = self.rest(@api_base + endpoint + "?api_key=#{@api_key}" + args)
+    url = @api_base + endpoint + "?api_key=#{@api_key}" + args
+    res = self.rest(url)
     data = res["data"]
-    raise "Error: #{data["error_message"]}" unless res["status"] == "success"
+    raise "Error for URL: #{url}: #{data["error_message"]}" unless res["status"] == "success"
     data
   end
 end

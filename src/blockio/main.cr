@@ -1,6 +1,18 @@
+require "big/big_decimal"
+
+TODO = Exception.new(<<-DOC)
+This function is not supported in this Shard yet
+Please add it yourself and create a PR
+DOC
+
 module Blockio
+  enum AddressType
+    Address
+    Label
+  end
+
   class Client
-    def initialize(@api_key : String)
+    def initialize(@api_key : String, @pin : String)
       @help = Helper.new(@api_key)
     end
 
@@ -10,7 +22,7 @@ module Blockio
     def get_new_address(label : String = "")
       label = "&label=#{label}" unless label.empty?
 
-      @help.get(endpoint: "get_new_address", data: label)
+      @help.get("get_new_address", label)
     end
 
     # Returns the balance of your entire Bitcoin, Litecoin, or Dogecoin account (i.e., the sum of balances of all addresses/users within it) as numbers to 8 decimal points, as strings.
@@ -57,35 +69,76 @@ module Blockio
     # Withdrawal Actions
 
     # Withdraws amount of coins from any addresses in your account to up to 2500 destination addresses.
-    def withdraw
-      # TODO
+    def withdraw(input : Hash(String, BigDecimal), estimate_fee : Bool = false)
+      amounts = "amounts="
+      addresses = "to_addresses="
+      input.each do |address, amount|
+        addresses += address + ','
+        amounts += amount.to_s + ','
+      end
+
+      addresses = addresses.rchop(',')
+      amounts = amounts.rchop(',')
+      return @help.get("get_network_fee_estimate", addresses, amounts) if estimate_fee
+      response = @help.get("withdraw", addresses, amounts)
+
+      if response["reference_id"]?
+        # Block.io's asking us to provide some client-side signatures, let's get to it
+
+        data = JSON.parse("{\"data\" : #{response.to_json.to_s}, \"pin\": \"#{@pin}\"}")
+
+        res = HTTP::Client.post("localhost:4567/sign", body: data.to_json.to_s).body
+
+        # the response object is now signed, let's stringify it and finalize this withdrawal
+        response = @help.get("sign_and_finalize_withdrawal", "signature_data=#{res}")
+
+        # if we provided all the required signatures, this transaction went through
+        # otherwise Block.io responded with data asking for more signatures
+        # the latter will be the case for dTrust addresses
+      end
+      response
+    end
+
+    def withdraw(address : String, amount : BigDecimal)
+      withdraw({address => amount})
     end
 
     # Withdraws AMOUNT coins from upto 2500 addresses at a time, and deposits it to up to 2500 destination addresses.
     def withdraw_from_addresses
-      # TODO
+      raise TODO
     end
 
     # Withdraws AMOUNT coins from upto 2500 labels at a time, and deposits it to upto 2500 destination addresses, or labels.
     def withdraw_from_labels
-      # TODO
+      raise TODO
     end
 
     # Estimates the Network Fee you will need to pay when you make a withdrawal request. The Network Fee is required by the Bitcoin/Dogecoin/etc. networks, not Block.io.
     def get_network_fee_estimate
-      # TODO
+      raise "This method was only left here for completeness.\nPlease add `estimate_fee: true` to any withdrawal request"
     end
 
     # Address Archival Actions
 
     # Archives upto 100 addresses in a single API call. Addresses can be specified by their labels.
-    def archive_addresses
-      # TODO
+    def archive_addresses(addresses : Array(String), kind : AddressType = AddressType::Address)
+      archive(true, addresses, kind)
     end
 
     # Unarchives upto 100 addresses in a single API call. Addresses can be specified by their labels.
-    def unarchive_addresses
-      # TODO
+    def unarchive_addresses(addresses : Array(String), kind : AddressType = AddressType::Address)
+      archive(false, addresses, kind)
+    end
+
+    private def archive(archive : Bool, addresses : Array(String), kind : AddressType)
+      case kind
+      when .address? then str = "addresses="
+      when .label?   then str = "labels="
+      else                raise "Unsupported Type"
+      end
+
+      endpoint = archive ? "" : "un"
+      @help.get(endpoint + "archive_addresses", str + addresses.join(','))
     end
 
     # Returns all the archived addresses, their labels, and user ids on your account.
@@ -107,7 +160,7 @@ module Blockio
     # Returns an array of transactions that were sent by Block.io Green Addresses.
     # Funds sent from Green Addresses are guaranteed by Block.io, and can be used immediately on receipt with zero network confirmations.
     def is_green_transaction(transactions : Array(String))
-      # TODO
+      @help.get("is_green_transaction", "transaction_ids=#{transactions.join(',')}")
     end
 
     # Returns various data for the last 25 transactions spent or received. You can optionally specify a before_tx parameter to get earlier transactions.
@@ -115,11 +168,11 @@ module Blockio
     # Each result provides a confidence rating that shows the network's belief in the transaction's viability.
     # We recommend waiting for confidence ratings to reach 0.90-0.99 for unconfirmed transactions if you need to validate it.
     # If a double spend is detected for an unconfirmed transaction, its confidence rating falls to 0.0.
-    def get_transactions(type_of_tx : String, before_tx : String = "", addresses : String = "")
+    def get_transactions(type_of_tx : String, before_tx : String? = nil, addresses : String? = nil)
       data = ""
       data = data + type_of_tx
-      data = data + "&before_tx=#{before_tx}" unless before_tx.empty?
-      data = data + "&address=#{addresses}" unless addresses.empty?
+      data = data + "&before_tx=#{before_tx}" if before_tx
+      data = data + "&address=#{addresses}" if addresses
 
       @help.get("get_transaction", data)
     end

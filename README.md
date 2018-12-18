@@ -1,6 +1,7 @@
 # blockiocr
 
-TODO: Write a description here
+Crystal library to interact with block.io
+Currently requires a ruby interface to handle transaction signing. Attempt to do so in crystal at `signing`
 
 ## Installation
 
@@ -12,13 +13,20 @@ dependencies:
     github: greenbigfrog/blockiocr
 ```
 
+## Dependencies
+- Ruby (for withdrawals)
+
 ## Usage
 
 ```crystal
 require "blockiocr"
+
+client = Blockio::Client.new(ENV["API_KEY"], ENV["PIN"])
+
+puts client.get_balance
 ```
 
-TODO: Write usage instructions here
+If you want to withdraw coins, you'll need to run `rb/server.rb` as well
 
 ## Development
 
@@ -26,7 +34,7 @@ TODO: Write development instructions here
 
 ## Contributing
 
-1. Fork it ( https://github.com/[your-github-name]/blockiocr/fork )
+1. Fork it ( https://github.com/greenbigfrog/blockiocr/fork )
 2. Create your feature branch (git checkout -b my-new-feature)
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)

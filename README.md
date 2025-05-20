@@ -1,6 +1,10 @@
+# block.io has stopped operating. The code is mostly a POC and unpolished. Leaving up as archived.
+
+
 # blockiocr
 
 Crystal library to interact with block.io
+
 Currently requires a ruby interface to handle transaction signing. Attempt to do so in crystal at `signing`
 
 ## Installation
